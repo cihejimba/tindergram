@@ -1,1 +1,14 @@
-<p>Name: {{viewModel.name}}</p>
+<div class="tinder-card">
+  <header>
+    <div>
+      <i class="icon ion-ios-location-outline"></i>
+      {{viewModel.locationName}}
+    </div>
+    <div>
+      <i class="icon ion-ios-heart-outline"></i>
+      {{viewModel.likeCount}}
+    </div>
+  </header>
+  <img ng-src="{{viewModel.imageUrl}}">
+  <footer><div class="caption">{{viewModel.caption}}</div></footer>
+</div>

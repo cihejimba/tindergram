@@ -18,10 +18,25 @@
     <!-- cordova script (this will be a 404 during development) -->
     <script src="cordova.js"></script>
 
+    <!-- ApiKeys Modules -->
+    <script src="js/apiKeys/apikeys.module.js"></script>
+    <script src="js/apiKeys/instagram.js"></script>
+
+    <!-- Instagram Module -->
+    <script src="js/instagram/instagram.module.js"></script>
+    <script src="js/instagram/api.factory.js"></script>
+    <script src="js/instagram/viewModel.factory.js"></script>
+    <script src="js/instagram/instagramRequest.factory.js"></script>
+
+    <!-- common -->
+    <script src="lib/underscore/underscore-min.js"></script>
+    <script src="js/common/underscore.angular.js"></script>
+
     <!-- your app's js -->
     <script src="js/app.js"></script>
+
   </head>
-  <body ng-app="tindergram" ng-controller="MainCtrl">
+  <body ng-app="Tindergram" ng-controller="MainCtrl">
 
     <ion-pane>
       <ion-header-bar class="bar-stable">

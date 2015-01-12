@@ -3,17 +3,22 @@
 // angular.module is a global place for creating, registering and retrieving Angular modules
 // 'starter' is the name of this angular module example (also set in a <body> attribute in index.html)
 // the 2nd parameter is an array of 'requires'
-angular.module('tindergram', ['ionic'])
+angular.module('Tindergram', [
+  'ionic',
+  'Tindergram.Instagram']
+)
 
 .controller('MainCtrl', ['$scope', function ($scope) {
 
 }])
-.controller('InstagramCtrl', ['$scope', function ($scope) {
-  var tinderCollection = [
-    { name : 'kyle'},
-    { name : 'Bob'}
-  ];
-  $scope.tinderCollection = tinderCollection;
+.controller('InstagramCtrl', ['$scope', 'instagram.factory', function ($scope, instagramFactory) {
+  $scope.tinderCollection = [];
+
+  instagramFactory.getNextInstagram(1).then(function(viewModels) {
+    $scope.tinderCollection = viewModels;
+    console.log(viewModels);
+  });
+
 }])
 
 .directive('tinderCollection', function () {
