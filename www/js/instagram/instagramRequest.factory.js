@@ -7,37 +7,53 @@ angular.module('Tindergram.Instagram')
   '$q',
 function (viewModel, api, _, $q) {
 
-  var cache = [],
-  nextUri,
+  var maxTagId,
   hashtag = 'foodporn',
-  buildingCache = false;
+  CacheQueue = {};
+
+  CacheQueue.cache = [];
+  CacheQueue.callbacks = [];
+  CacheQueue.fetchingData = false;
+
+  CacheQueue.flushQueue = function () {
+    if (this.callbacks.length <= 0) return;
+
+    this.callbacks.pop()();
+
+    this.flushQueue();
+  };
 
   function getNextInstagram (num) {
     var
       dfd = $q.defer(),
-      num = num || 1;
-
-    if (cache.length > num) {
-      var result = [];
-      _.times(num, function (i) {
-        result.push(new viewModel(cache.pop()));
-      });
-      dfd.resolve(result);
-    } else if (cache.length === num) {
+      num = num || 1,
       result = [];
+
+    if (CacheQueue.cache.length >= num) {
       _.times(num, function (i) {
-        result.push(new viewModel(cache.pop()));
+        result.push(new viewModel(CacheQueue.cache.pop()));
       });
-      buildCache();
+      console.log('USE CACHE: ', CacheQueue.cache.length);
+
       dfd.resolve(result);
     } else {
-      buildCache().then(function () {
-        var result = [];
+      CacheQueue.callbacks.push(function () {
         _.times(num, function (i) {
-          result.push(new viewModel(cache.pop()));
+          result.push(new viewModel(CacheQueue.cache.pop()));
         });
+        console.log('DELAYED CACHE: ', CacheQueue.cache.length);
+
         dfd.resolve(result);
       });
+
+      if (CacheQueue.fetchingData === false) {
+        console.log('BUILD CACHE: ', CacheQueue.cache.length);
+        buildCache().then(function (newCache) {
+          CacheQueue.cache = CacheQueue.cache.concat(newCache);
+          console.log('CACHE BUILT: ', CacheQueue.cache.length);
+          CacheQueue.flushQueue();
+        });
+      }
     }
     return dfd.promise;
   }
@@ -45,15 +61,17 @@ function (viewModel, api, _, $q) {
   function buildCache () {
     var dfd = $q.defer();
 
-    if (nextUri) {
-      api.getMediaFromURI(nextUri).then(function(response) {
-        handleResponse(response.data);
-        dfd.resolve();
+    CacheQueue.fetchingData = true;
+
+    if (maxTagId) {
+      api.getMediaFromMaxTagId(maxTagId).then(function(response) {
+        CacheQueue.fetchingData = false;
+        dfd.resolve(handleResponse(response.data));
       });
     } else {
       api.getMediaByTagName(hashtag).then(function(response) {
-        handleResponse(response.data);
-        dfd.resolve();
+        CacheQueue.fetchingData = false;
+        dfd.resolve(handleResponse(response.data));
       });
     }
     return dfd.promise;
@@ -64,8 +82,9 @@ function (viewModel, api, _, $q) {
   }
 
   function handleResponse (response) {
-    nextUri = response.pagination.next_url;
-    cache = getMostLikedPhotos(response.data).concat(cache);
+    // remove callback and client id which will be reset by api factory
+    maxTagId = response.pagination.next_max_id;
+    return getMostLikedPhotos(response.data).concat(CacheQueue.cache);
   }
 
   return {

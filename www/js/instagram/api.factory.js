@@ -3,11 +3,14 @@ angular.module('Tindergram.Instagram')
 .factory('intagramAPI.factory', [
   '$http',
   'apikeys.instagram',
+  '_',
 
-function ($http, apiKeys) {
+function ($http, apiKeys, _) {
 
   var
     BASE_URI = 'https://api.instagram.com/v1',
+    DEFAULT_TAG = 'foodporn',
+    tagName = DEFAULT_TAG,
     BASE_PARAMS = {
       client_id : apiKeys.CLIENT_ID,
       callback : 'JSON_CALLBACK'
@@ -15,16 +18,22 @@ function ($http, apiKeys) {
     api = {}
   ;
 
-  api.getMediaByTagName = function getMediaByTagName (tagName) {
-    var uri = BASE_URI + '/tags/' + tagName + '/media/recent';
+  function fullTagUri () {
+    return BASE_URI + '/tags/' + tagName + '/media/recent';
+  }
 
-    return $http.jsonp(uri, {
+  api.getMediaByTagName = function getMediaByTagName (newTagName) {
+    if (newTagName) tagName = newTagName;
+
+    return $http.jsonp(fullTagUri(), {
       params : BASE_PARAMS
     });
   };
 
-  api.getMediaFromURI = function getMediaFromURI (uri) {
-    return $http.jsonp(uri);
+  api.getMediaFromMaxTagId = function getMediaFromMaxTagId (maxTagId) {
+    return $http.jsonp(fullTagUri(), {
+      params : _.extend(BASE_PARAMS, {max_tag_id : maxTagId})
+    });
   };
 
   return api;

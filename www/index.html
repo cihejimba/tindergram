@@ -7,6 +7,7 @@
 
     <link href="lib/ionic/css/ionic.css" rel="stylesheet">
     <link href="css/style.css" rel="stylesheet">
+    <link href="css/icons.css" rel="stylesheet">
 
     <!-- IF using Sass (run gulp sass first), then uncomment below and remove the CSS includes above
     <link href="css/ionic.app.css" rel="stylesheet">
@@ -43,10 +44,16 @@
         <h1 class="title">Tindergram</h1>
       </ion-header-bar>
       <ion-content scroll="false">
-        <div ng-controller="InstagramCtrl">
+        <!-- <div ng-controller="InstaCollectionCtrl"> -->
           <tinder-collection tinder-collection="tinderCollection"></tinder-collection>
-        </div>
+        <!-- </div> -->
       </ion-content>
+      <ion-footer-bar>
+        <div ng-controller="FooterCtrl" class="footer-ctrl">
+          <button class="button button-outline button-assertive tinder-button close-button" on-release="onRelease($event)" on-touch="onTouch($event)" ng-style="scaleYes" data-type="yes"><i class="icon ion-close"></i></button>
+          <button class="button button-outline button-balanced tinder-button like-button" on-release="onRelease($event)"  on-touch="onTouch($event)" ng-style="scaleNo" data-type="no"><i class="icon ion-ios-heart-outline"></i></button>
+        </div>
+      </ion-footer-bar>
     </ion-pane>
   </body>
 </html>
