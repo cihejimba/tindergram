@@ -100,6 +100,7 @@ function ($scope, $element, $window, style, _) {
       x : elBoundingRec.left + (elBoundingRec.width / 2),
       y : elBoundingRec.top + (elBoundingRec.height / 2)
     },
+    startY,
     INITIAL_POSITION = style.css('top', '0px', style.css('left', '0px'));
 
   function translateDragData (eventData) {
@@ -117,14 +118,12 @@ function ($scope, $element, $window, style, _) {
     return Math.asin(eventData.deltaX / radius) * 180 / Math.PI;
   }
 
-  function getRotation (eventData, upDirection) {
-    var theta = getTheta(eventData);
+  function getRotation (eventData) {
+    var theta = getTheta(eventData),
+      upDirection = startY > cardMidpoint.y;
 
-    if (upDirection === undefined) upDirection = true;
-    console.log(theta);
-    return upDirection ? theta : -1 * theta;
-
-    return 0;
+    console.log(upDirection + ' ' + theta);
+    return upDirection ? -1 * theta : theta;
   }
 
   function getOpactiy (deltaX) {
@@ -147,8 +146,20 @@ function ($scope, $element, $window, style, _) {
   $scope.onDrag = function onDrag (ev) {
     var
       eventData = translateDragData(ev),
-      rotation = getRotation(eventData);
+      rotation,
+      target = ev.target;
 
+    if (dragState === false) {
+      while(target !== ev.currentTarget) {
+        if (target.className.indexOf('card-footer') !== -1) return;
+
+        target = target.parentElement;
+      }
+    }
+
+    if (startY === undefined) startY = eventData.startY;
+
+    rotation = getRotation(eventData);
     dragState = true;
     $scope.$emit('drag | card', ev);
 
@@ -164,6 +175,7 @@ function ($scope, $element, $window, style, _) {
     if (dragState === true) $scope.$emit('drag-stop | card', ev);
 
     dragState = false;
+    startY = undefined;
   };
 
   $scope.$on('release | main', function () {

@@ -85,16 +85,16 @@
 
 .tinder-card .sign-yes {
   color: green;
-  right: 10px;
+  left: 10px;
   top: 32px;
-  transform: rotate(20deg);
+  transform: rotate(-20deg);
 }
 
 .tinder-card .sign-no {
   color: red;
-  left: 10px;
+  right: 10px;
   top: 26px;
-  transform: rotate(-20deg);
+  transform: rotate(20deg);
 }
 
 .tinder-card footer {
