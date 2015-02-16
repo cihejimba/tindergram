@@ -5,7 +5,8 @@
 // the 2nd parameter is an array of 'requires'
 angular.module('Tindergram', [
   'ionic',
-  'Tindergram.Instagram']
+  'Tindergram.Instagram',
+  'Style']
 )
 
 .controller('MainCtrl', ['$scope', '$window', function ($scope, $window) {
@@ -88,13 +89,18 @@ angular.module('Tindergram', [
 
 }])
 
-.controller('InstaCardCtrl', ['$scope', '$element', '$window', function ($scope, $element, $window) {
+.controller('InstaCardCtrl', ['$scope', '$element', '$window', 'common.style', '_',
+
+function ($scope, $element, $window, style, _) {
   var
     dragState = false,
     viewportWidth = $window.innerWidth,
-    INITIAL_POSITION = {left : '0px', top : '0px'};
-
-  $scope.position = INITIAL_POSITION;
+    elBoundingRec = $element.children()[0].getBoundingClientRect(),
+    cardMidpoint = {
+      x : elBoundingRec.left + (elBoundingRec.width / 2),
+      y : elBoundingRec.top + (elBoundingRec.height / 2)
+    },
+    INITIAL_POSITION = style.css('top', '0px', style.css('left', '0px'));
 
   function translateDragData (eventData) {
     return {
@@ -103,6 +109,42 @@ angular.module('Tindergram', [
       deltaX : eventData.gesture.deltaX,
       deltaY : eventData.gesture.deltaY
     };
+  }
+
+  function applyPendulumEffect (eventData) {
+    if (eventData.startY > cardMidpoint.y) {
+      eventData.deltaY = pendulumMath(eventData, false)
+    } else {
+      eventData.deltaY = pendulumMath(eventData, true);
+    }
+
+    return eventData;
+  }
+
+  function pendulumMath (eventData, upDirection) {
+    var
+      radius = viewportWidth * 3,
+      theta = Math.asin(Math.abs(eventData.deltaX) / radius),
+      radY = (1 - Math.cos(theta)) * radius;//px
+      // resS = Math.asin(Math.abs(eventData.deltaX) / radius); //px
+      // debugger;
+    if (upDirection === undefined) upDirection = true;
+
+    if (radY.toString() === 'NaN') radY = 0;
+
+    if (upDirection) {
+      console.log('up: ', radY);
+      console.log('deltaX: ', eventData.deltaX);
+      return eventData.deltaY + radY;
+    } else {
+      console.log('down: ', radY);
+      console.log('deltaX: ', eventData.deltaX);
+      return eventData.deltaY - radY;
+    }
+  }
+
+  function getModifiedDragData (eventData) {
+    return applyPendulumEffect(translateDragData(eventData));
   }
 
   function getOpactiy (deltaX) {
@@ -114,24 +156,26 @@ angular.module('Tindergram', [
     return [maxOpacity, minOpactiy, calculatedOpacity].sort()[1];
   }
 
-  function setOpacity (opacity) {
-    return { opacity : opacity };
-  }
+  // function setOpacity (opacity, prop) {
+  //   return style.css('opacity', opacity, prop);
+  // }
 
   function resetCard () {
-    $scope.position = INITIAL_POSITION;
-    $scope.opacityLeft = 0;
-    $scope.opacityRight = 0;
+    $scope.position = _.clone(INITIAL_POSITION);
+    $scope.opacityLeft =  style.css('opacity', 0, $scope.opacityLeft);
+    $scope.opacityRight = style.css('opacity', 0, $scope.opacityRight);
   }
 
+  $scope.position = resetCard();
+
   $scope.onDrag = function onDrag (ev) {
-    var eventData = translateDragData(ev);
+    var eventData = getModifiedDragData(ev);
     dragState = true;
     $scope.$emit('drag | card', ev);
 
-    $scope.position = { left : eventData.deltaX + 'px', top: eventData.deltaY + 'px'};
-    $scope.opacityLeft = setOpacity(getOpactiy(eventData.deltaX));
-    $scope.opacityRight = setOpacity(getOpactiy(-1 * eventData.deltaX));
+    $scope.position = style.css('top', eventData.deltaY + 'px', style.css('left', eventData.deltaX + 'px', $scope.position));
+    $scope.opacityLeft = style.css( 'opacity', getOpactiy(eventData.deltaX), $scope.opacityLeft);
+    $scope.opacityRight = style.css('opacity', getOpactiy(-1 * eventData.deltaX), $scope.opacityRight);
 
   };
 
@@ -152,7 +196,8 @@ angular.module('Tindergram', [
   // });
 }])
 
-.controller('FooterCtrl', ['$scope', '$element', '$window', function ($scope, $element, $window) {
+.controller('FooterCtrl', ['$scope', '$element', '$window', 'common.style',
+function ($scope, $element, $window, style) {
   var
     viewportWidth = $window.innerWidth,
     touchState = false,
@@ -181,8 +226,9 @@ angular.module('Tindergram', [
   }
 
   function handleDragEvent (broadcastEvent, eventData) {
-    $scope.scaleYes = setButtonScale(getScale(-1 * eventData.deltaX));
-    $scope.scaleNo = setButtonScale(getScale(eventData.deltaX));
+    $scope.scaleYes = style.css('transform', 'scale(' + getScale(-1 * eventData.deltaX) + ')', $scope.scaleYes);
+    $scope.scaleNo =  style.css('transform', 'scale(' + getScale(eventData.deltaX) + ')', $scope.scaleNo);
+    // console.log('NO-scale: ', setButtonScale(getScale(eventData.deltaX)));
     $element.find('button').addClass(DRAG_CLASS);
   }
 
