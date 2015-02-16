@@ -111,40 +111,20 @@ function ($scope, $element, $window, style, _) {
     };
   }
 
-  function applyPendulumEffect (eventData) {
-    if (eventData.startY > cardMidpoint.y) {
-      eventData.deltaY = pendulumMath(eventData, false)
-    } else {
-      eventData.deltaY = pendulumMath(eventData, true);
-    }
+  function getTheta (eventData) {
+    var radius = viewportWidth * 3;
 
-    return eventData;
+    return Math.asin(eventData.deltaX / radius) * 180 / Math.PI;
   }
 
-  function pendulumMath (eventData, upDirection) {
-    var
-      radius = viewportWidth * 3,
-      theta = Math.asin(Math.abs(eventData.deltaX) / radius),
-      radY = (1 - Math.cos(theta)) * radius;//px
-      // resS = Math.asin(Math.abs(eventData.deltaX) / radius); //px
-      // debugger;
+  function getRotation (eventData, upDirection) {
+    var theta = getTheta(eventData);
+
     if (upDirection === undefined) upDirection = true;
+    console.log(theta);
+    return upDirection ? theta : -1 * theta;
 
-    if (radY.toString() === 'NaN') radY = 0;
-
-    if (upDirection) {
-      console.log('up: ', radY);
-      console.log('deltaX: ', eventData.deltaX);
-      return eventData.deltaY + radY;
-    } else {
-      console.log('down: ', radY);
-      console.log('deltaX: ', eventData.deltaX);
-      return eventData.deltaY - radY;
-    }
-  }
-
-  function getModifiedDragData (eventData) {
-    return applyPendulumEffect(translateDragData(eventData));
+    return 0;
   }
 
   function getOpactiy (deltaX) {
@@ -156,10 +136,6 @@ function ($scope, $element, $window, style, _) {
     return [maxOpacity, minOpactiy, calculatedOpacity].sort()[1];
   }
 
-  // function setOpacity (opacity, prop) {
-  //   return style.css('opacity', opacity, prop);
-  // }
-
   function resetCard () {
     $scope.position = _.clone(INITIAL_POSITION);
     $scope.opacityLeft =  style.css('opacity', 0, $scope.opacityLeft);
@@ -169,13 +145,18 @@ function ($scope, $element, $window, style, _) {
   $scope.position = resetCard();
 
   $scope.onDrag = function onDrag (ev) {
-    var eventData = getModifiedDragData(ev);
+    var
+      eventData = translateDragData(ev),
+      rotation = getRotation(eventData);
+
     dragState = true;
     $scope.$emit('drag | card', ev);
 
     $scope.position = style.css('top', eventData.deltaY + 'px', style.css('left', eventData.deltaX + 'px', $scope.position));
     $scope.opacityLeft = style.css( 'opacity', getOpactiy(eventData.deltaX), $scope.opacityLeft);
     $scope.opacityRight = style.css('opacity', getOpactiy(-1 * eventData.deltaX), $scope.opacityRight);
+
+    $scope.position = style.css('transform', 'rotate(' + rotation + 'deg)', $scope.position);
 
   };
 
