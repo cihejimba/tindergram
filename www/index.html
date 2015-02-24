@@ -51,8 +51,8 @@
       </ion-content>
       <ion-footer-bar>
         <div ng-controller="FooterCtrl" class="footer-ctrl">
-          <button class="button button-outline button-assertive tinder-button close-button" on-release="onRelease($event)" on-touch="onTouch($event)" ng-style="scaleYes" data-type="yes"><i class="icon ion-close"></i></button>
-          <button class="button button-outline button-balanced tinder-button like-button" on-release="onRelease($event)"  on-touch="onTouch($event)" ng-style="scaleNo" data-type="no"><i class="icon ion-ios-heart-outline"></i></button>
+          <button class="button button-outline button-assertive tinder-button close-button" on-release="onRelease($event)" on-touch="onTouch($event)" ng-class="buttonKlass" ng-style="scaleYes" data-type="yes"><i class="icon ion-close"></i></button>
+          <button class="button button-outline button-balanced tinder-button like-button" on-release="onRelease($event)"  on-touch="onTouch($event)" ng-class="buttonKlass" ng-style="scaleNo" data-type="no"><i class="icon ion-ios-heart-outline"></i></button>
         </div>
       </ion-footer-bar>
     </ion-pane>

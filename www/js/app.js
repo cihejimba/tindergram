@@ -4,6 +4,7 @@
 // 'starter' is the name of this angular module example (also set in a <body> attribute in index.html)
 // the 2nd parameter is an array of 'requires'
 angular.module('Tindergram', [
+  'ngAnimate',
   'ionic',
   'Tindergram.Instagram',
   'Style']
@@ -89,9 +90,9 @@ angular.module('Tindergram', [
 
 }])
 
-.controller('InstaCardCtrl', ['$scope', '$element', '$window', 'common.style', '_',
+.controller('InstaCardCtrl', ['$scope', '$element', '$window', '$animate', 'common.style', '_',
 
-function ($scope, $element, $window, style, _) {
+function ($scope, $element, $window, $animate, style, _) {
   var
     dragState = false,
     viewportWidth = $window.innerWidth,
@@ -112,6 +113,10 @@ function ($scope, $element, $window, style, _) {
     };
   }
 
+  function draggedEnough (deltaX) {
+    return Math.abs(deltaX) / viewportWidth > 0.4;
+  }
+
   function getTheta (eventData) {
     var radius = viewportWidth * 3;
 
@@ -122,7 +127,6 @@ function ($scope, $element, $window, style, _) {
     var theta = getTheta(eventData),
       upDirection = startY > cardMidpoint.y;
 
-    console.log(upDirection + ' ' + theta);
     return upDirection ? -1 * theta : theta;
   }
 
@@ -139,6 +143,10 @@ function ($scope, $element, $window, style, _) {
     $scope.position = _.clone(INITIAL_POSITION);
     $scope.opacityLeft =  style.css('opacity', 0, $scope.opacityLeft);
     $scope.opacityRight = style.css('opacity', 0, $scope.opacityRight);
+    setTimeout(function () {
+      $scope.cardKlass = undefined;
+    }, 100);
+    // debugger;
   }
 
   $scope.position = resetCard();
@@ -163,7 +171,7 @@ function ($scope, $element, $window, style, _) {
     dragState = true;
     $scope.$emit('drag | card', ev);
 
-    $scope.position = style.css('top', eventData.deltaY + 'px', style.css('left', eventData.deltaX + 'px', $scope.position));
+    // $scope.position = style.css('top', eventData.deltaY + 'px', style.css('left', eventData.deltaX + 'px', $scope.position));
     $scope.opacityLeft = style.css( 'opacity', getOpactiy(eventData.deltaX), $scope.opacityLeft);
     $scope.opacityRight = style.css('opacity', getOpactiy(-1 * eventData.deltaX), $scope.opacityRight);
 
@@ -172,7 +180,54 @@ function ($scope, $element, $window, style, _) {
   };
 
   $scope.onRelease = function onRelease (ev) {
-    if (dragState === true) $scope.$emit('drag-stop | card', ev);
+    // debugger;
+    ev.preventDefault();
+    var eventData = translateDragData(ev);
+
+    if (dragState === true) {
+      // $scope.cardKlass = 'release';
+      if (draggedEnough(eventData.deltaX)) {
+        console.log('DRAGGED ENOUGH');
+
+        if (eventData.deltaX > 0) {
+          // $scope.cardKlass = 'release release-right';
+          console.log(eventData.deltaX + 100 + 'px');
+          var now = Date.now();
+          // debugger;
+          var animation = $animate.animate($element.children(), {left: '300px'});
+          animation.then(function () {
+            var diff = Date.now() - now;
+            debugger;
+            $scope.$emit('drag-stop | card', ev);
+          });
+          // $scope.position = style.css('left', eventData.deltaX + 200 + 'px', $scope.position);
+        } else {
+          // $scope.cardKlass = 'release release-left';
+          console.log(eventData.deltaX - 200 + 'px');
+          var animation = $animate.animate($element.children()[0], style.css('left', eventData.deltaX - 200 + 'px', $scope.position));
+          animation.then(function () {
+            $scope.$emit('drag-stop | card', ev);
+          });
+          // $scope.position = style.css('left', eventData.deltaX - 200 + 'px', $scope.position);
+        }
+        // setTimeout(function () {
+        //   // debugger;
+
+        // }, 1000);
+
+      } else {
+        // $scope.$emit('drag-stop | card', ev);
+        setTimeout(function () {
+          debugger;
+          $scope.$emit('drag-stop | card', ev);
+        }, 1000);
+      }
+    }
+
+    // setTimeout(function () {
+    //   // debugger;
+    //   if (internalDragState === true) $scope.$emit('drag-stop | card', ev);
+    // }, 300);
 
     dragState = false;
     startY = undefined;
@@ -182,11 +237,6 @@ function ($scope, $element, $window, style, _) {
     resetCard();
   });
 
-  // $scope.$on('drag | main', function (broadcastEvent, eventData) {
-  //   // debugger;
-  //   console.log(JSON.stringify({ left : eventData.deltaX , top: eventData.deltaY }));
-  //   $scope.position = { left : eventData.deltaX + 'px', top: eventData.deltaY + 'px'};
-  // });
 }])
 
 .controller('FooterCtrl', ['$scope', '$element', '$window', 'common.style',
@@ -221,12 +271,11 @@ function ($scope, $element, $window, style) {
   function handleDragEvent (broadcastEvent, eventData) {
     $scope.scaleYes = style.css('transform', 'scale(' + getScale(-1 * eventData.deltaX) + ')', $scope.scaleYes);
     $scope.scaleNo =  style.css('transform', 'scale(' + getScale(eventData.deltaX) + ')', $scope.scaleNo);
-    // console.log('NO-scale: ', setButtonScale(getScale(eventData.deltaX)));
-    $element.find('button').addClass(DRAG_CLASS);
+    $scope.buttonKlass = DRAG_CLASS;
   }
 
   function handleDragStopEvent () {
-    $element.find('button').addClass(DRAG_CLASS);
+    $scope.buttonKlass = undefined;
     resetButtonScale();
   }
 
@@ -239,13 +288,8 @@ function ($scope, $element, $window, style) {
     if (touchState !== true) return;
 
     $event.target.classList.remove(TOUCH_CLASS);
-    $event.target.classList.add(RELEASE_CLASS);
 
     next($event.target.getAttribute(BUTTON_DATA));
-
-    $window.setTimeout(function () {
-      $event.target.classList.remove(RELEASE_CLASS);
-    }, 500);
   }
 
   function resetButtonScale () {
