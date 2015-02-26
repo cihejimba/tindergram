@@ -26,24 +26,26 @@ angular.module('Tindergram', [
     return Math.abs(deltaX) / viewportWidth > 0.4;
   }
 
-  function handleDragStop (dragData) {
+  function handleDragStop (dragData, tag) {
     if (draggedEnough(dragData.deltaX)) {
       if (dragData.deltaX > 0) {
-        $scope.$broadcast('next-yes | main');
+        $scope.$broadcast('next-yes-' + tag + ' | main');
       } else {
-        $scope.$broadcast('next-no | main');
+        $scope.$broadcast('next-no-' + tag + ' | main');
       }
     } else {
-      $scope.$broadcast('release | main');
+      $scope.$broadcast('release-' + tag + ' | main');
     }
   }
 
   $scope.$on('next-yes | footer', function (event, data) {
-    $scope.$broadcast('next-yes | main');
+    $scope.$broadcast('next-yes-pre | main');
+    $scope.$broadcast('next-yes-post | main');
   });
 
   $scope.$on('next-no | footer', function (event, data) {
-    $scope.$broadcast('next-no | main');
+    $scope.$broadcast('next-no-pre | main');
+    $scope.$broadcast('next-no-post | main');
   });
 
   $scope.$on('drag | card', function (broadcastEvent, eventData) {
@@ -52,8 +54,12 @@ angular.module('Tindergram', [
     $scope.$broadcast('drag | main', translateDragData(eventData));
   });
 
-  $scope.$on('drag-stop | card', function (broadcastEvent, eventData) {
-    handleDragStop(translateDragData(eventData));
+  $scope.$on('drag-stop-pre | card', function (broadcastEvent, eventData) {
+    handleDragStop(translateDragData(eventData), 'pre');
+  });
+
+  $scope.$on('drag-stop-post | card', function (broadcastEvent, eventData) {
+    handleDragStop(translateDragData(eventData), 'post');
   });
  }])
 
@@ -67,12 +73,12 @@ angular.module('Tindergram', [
     });
   };
 
-  $scope.$on('next-yes | main', function (event, data) {
+  $scope.$on('next-yes-post | main', function (event, data) {
     if ($scope.tinderCollection.length <= 0) return;
     next();
   });
 
-  $scope.$on('next-no | main', function (event, data) {
+  $scope.$on('next-no-post | main', function (event, data) {
     if ($scope.tinderCollection.length <= 0) return;
     next();
   });
@@ -146,7 +152,6 @@ function ($scope, $element, $window, $animate, style, _) {
     setTimeout(function () {
       $scope.cardKlass = undefined;
     }, 100);
-    // debugger;
   }
 
   $scope.position = resetCard();
@@ -171,85 +176,67 @@ function ($scope, $element, $window, $animate, style, _) {
     dragState = true;
     $scope.$emit('drag | card', ev);
 
-    // $scope.position = style.css('top', eventData.deltaY + 'px', style.css('left', eventData.deltaX + 'px', $scope.position));
+    $scope.position = style.css('top', eventData.deltaY + 'px', style.css('left', eventData.deltaX + 'px', $scope.position));
     $scope.opacityLeft = style.css( 'opacity', getOpactiy(eventData.deltaX), $scope.opacityLeft);
     $scope.opacityRight = style.css('opacity', getOpactiy(-1 * eventData.deltaX), $scope.opacityRight);
 
     $scope.position = style.css('transform', 'rotate(' + rotation + 'deg)', $scope.position);
-
   };
 
   $scope.onRelease = function onRelease (ev) {
-    // debugger;
     ev.preventDefault();
-    var eventData = translateDragData(ev);
+    var
+      eventData = translateDragData(ev),
+      PX_TO_SLIDE = 250;
+
+    function animateCardExit (px) {
+      $animate.animate(
+        $element.children(),
+        _.clone($scope.position),
+        style.css('left', (eventData.deltaX + px) + 'px', $scope.position),
+        'release'
+      ).then(function () {
+        $scope.$emit('drag-stop-post | card', ev);
+      });
+    }
 
     if (dragState === true) {
-      // $scope.cardKlass = 'release';
       if (draggedEnough(eventData.deltaX)) {
         console.log('DRAGGED ENOUGH');
 
         if (eventData.deltaX > 0) {
-          // $scope.cardKlass = 'release release-right';
-          console.log(eventData.deltaX + 100 + 'px');
-          var now = Date.now();
-          // debugger;
-          var animation = $animate.animate($element.children(), {left: '300px'});
-          animation.then(function () {
-            var diff = Date.now() - now;
-            debugger;
-            $scope.$emit('drag-stop | card', ev);
-          });
-          // $scope.position = style.css('left', eventData.deltaX + 200 + 'px', $scope.position);
+          $scope.$emit('drag-stop-pre | card', ev);
+          animateCardExit(PX_TO_SLIDE);
         } else {
-          // $scope.cardKlass = 'release release-left';
-          console.log(eventData.deltaX - 200 + 'px');
-          var animation = $animate.animate($element.children()[0], style.css('left', eventData.deltaX - 200 + 'px', $scope.position));
-          animation.then(function () {
-            $scope.$emit('drag-stop | card', ev);
-          });
-          // $scope.position = style.css('left', eventData.deltaX - 200 + 'px', $scope.position);
+          $scope.$emit('drag-stop-pre | card', ev);
+          animateCardExit(-1 * PX_TO_SLIDE);
         }
-        // setTimeout(function () {
-        //   // debugger;
-
-        // }, 1000);
-
       } else {
-        // $scope.$emit('drag-stop | card', ev);
-        setTimeout(function () {
-          debugger;
-          $scope.$emit('drag-stop | card', ev);
-        }, 1000);
+        $scope.$emit('drag-stop-pre | card', ev);
+        $scope.$emit('drag-stop-post | card', ev);
       }
     }
-
-    // setTimeout(function () {
-    //   // debugger;
-    //   if (internalDragState === true) $scope.$emit('drag-stop | card', ev);
-    // }, 300);
 
     dragState = false;
     startY = undefined;
   };
 
-  $scope.$on('release | main', function () {
+  $scope.$on('release-post | main', function () {
     resetCard();
   });
 
 }])
 
-.controller('FooterCtrl', ['$scope', '$element', '$window', 'common.style',
-function ($scope, $element, $window, style) {
+.controller('FooterCtrl', ['$scope', '$element', '$window', '$animate', 'common.style',
+function ($scope, $element, $window, $animate, style) {
   var
     viewportWidth = $window.innerWidth,
     touchState = false,
     RELEASE_CLASS = 'release',
     TOUCH_CLASS = 'touch',
     BUTTON_DATA = 'data-type',
-    DRAG_CLASS = 'drag';
-
-  // $scope.scaleYes, $scope.scaleNo
+    DRAG_CLASS = 'drag',
+    BASE_BUTTON_STYLE = style.css('transform', 'scale(1)');
 
   function next (direction) {
     $scope.$emit('next-' + direction + ' | footer');
@@ -269,14 +256,17 @@ function ($scope, $element, $window, style) {
   }
 
   function handleDragEvent (broadcastEvent, eventData) {
-    $scope.scaleYes = style.css('transform', 'scale(' + getScale(-1 * eventData.deltaX) + ')', $scope.scaleYes);
-    $scope.scaleNo =  style.css('transform', 'scale(' + getScale(eventData.deltaX) + ')', $scope.scaleNo);
+    $scope.scaleYes = style.css('transform', 'scale(' + getScale(eventData.deltaX) + ')', $scope.scaleYes);
+    $scope.scaleNo =  style.css('transform', 'scale(' + getScale(-1 * eventData.deltaX) + ')', $scope.scaleNo);
     $scope.buttonKlass = DRAG_CLASS;
   }
 
-  function handleDragStopEvent () {
+  function handleDragStopEvent (event, scopes) {
     $scope.buttonKlass = undefined;
-    resetButtonScale();
+
+    _.each(scopes, function (scope) {
+      resetButtonScale(scope);
+    });
   }
 
   function handleTouchEvent ($event) {
@@ -292,15 +282,34 @@ function ($scope, $element, $window, style) {
     next($event.target.getAttribute(BUTTON_DATA));
   }
 
-  function resetButtonScale () {
-    $scope.scaleYes = undefined;
-    $scope.scaleNo = undefined;
+  function resetButtonScale (scope) {
+    animateButtonShrink(scope);
+  }
+
+  function animateButtonShrink (data) {
+    var scope = 'scale' + data.charAt(0).toUpperCase() + data.substring(1).toLowerCase();
+    debugger;
+    $animate.animate(
+      $element.children(),
+      _.clone($scope[scope]),
+      BASE_BUTTON_STYLE,
+      RELEASE_CLASS
+    ).then(function () {
+      console.log(scope);
+      $scope[scope] = undefined;
+    });
   }
 
   $scope.$on('drag | main', handleDragEvent);
-  $scope.$on('release | main', handleDragStopEvent);
-  $scope.$on('next-yes | main', handleDragStopEvent);
-  $scope.$on('next-no | main', handleDragStopEvent);
+  $scope.$on('release-pre | main', function (ev) {
+    handleDragStopEvent(ev, ['yes', 'no']);
+  });
+  $scope.$on('next-yes-pre | main', function(ev) {
+    handleDragStopEvent(ev, ['yes']);
+  });
+  $scope.$on('next-no-pre | main', function (ev) {
+    handleDragStopEvent(ev, ['no']);
+  });
 
   $scope.onTouch = handleTouchEvent;
   $scope.onRelease = handleReleaseEvent;
