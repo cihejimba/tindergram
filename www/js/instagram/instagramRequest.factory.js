@@ -33,7 +33,6 @@ function (viewModel, api, _, $q) {
       _.times(num, function (i) {
         result.push(new viewModel(CacheQueue.cache.pop()));
       });
-      console.log('USE CACHE: ', CacheQueue.cache.length);
 
       dfd.resolve(result);
     } else {
@@ -41,16 +40,13 @@ function (viewModel, api, _, $q) {
         _.times(num, function (i) {
           result.push(new viewModel(CacheQueue.cache.pop()));
         });
-        console.log('DELAYED CACHE: ', CacheQueue.cache.length);
 
         dfd.resolve(result);
       });
 
       if (CacheQueue.fetchingData === false) {
-        console.log('BUILD CACHE: ', CacheQueue.cache.length);
         buildCache().then(function (newCache) {
           CacheQueue.cache = CacheQueue.cache.concat(newCache);
-          console.log('CACHE BUILT: ', CacheQueue.cache.length);
           CacheQueue.flushQueue();
         });
       }

@@ -1,0 +1,25 @@
+<div class="ng-class: cardKlass; tinder-card list card" on-drag="onDrag($event)" on-release="onRelease($event)" ng-style="position">
+  <header class="item">
+    <div class="header-line header-navigation" ng-show="viewModel.locationName">
+      <i class="icon ion-ios-location-outline"></i>
+      <p>{{viewModel.locationName}}</p>
+    </div>
+    <div class="header-line header-like-count" ng-show="viewModel.likeCount">
+      <p>{{viewModel.likeCount}}</p>
+      <i class="icon ion-ios-heart-outline"></i>
+    </div>
+  </header>
+
+  <main class="item item-image">
+    <img ng-src="{{viewModel.imageUrl}}">
+    <p class="sign sign-yes" data-sign="yes" ng-style="opacityLeft">YES!</p>
+    <p class="sign sign-no" data-sign="no" ng-style="opacityRight">NO!</p>
+  </main>
+
+  <footer class="card-footer item item-text-wrap">
+    <div class="caption-wrapper">
+      <p class="caption">{{viewModel.caption}}</p>
+    </div>
+    <div class="caption-base"></div>
+  </footer>
+</div>

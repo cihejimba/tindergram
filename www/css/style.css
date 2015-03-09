@@ -131,7 +131,11 @@
 }
 
 /* footer */
-.footer-ctrl button:last-child {
+.footer-ctrl li {
+  list-style: none;
+}
+
+.footer-ctrl li:last-child button{
   right: 0;
 }
 

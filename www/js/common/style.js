@@ -1,6 +1,8 @@
 angular.module('Style', [])
 
-.factory('common.style', function() {
+.factory('common.style',
+
+function() {
 	var
 		WINDOWS_TAG = '-ms-',
 		WEBKIT_TAG = '-webkit-',
